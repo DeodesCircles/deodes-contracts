@@ -1,0 +1,121 @@
+'forge clean' running (wd: /root/deodes-contracts)
+'forge config --json' running
+'forge build --build-info --deny never --skip ./test/** ./script/** --force' running (wd: /root/deodes-contracts)
+INFO:Detectors:
+Detector: arbitrary-send-eth
+DeodesCircle.payout(address) (src/DeodesCircle.sol#77-93) sends eth to arbitrary user
+	Dangerous calls:
+	- (ok,None) = recipient.call{value: net}() (src/DeodesCircle.sol#89)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+INFO:Detectors:
+Detector: incorrect-equality
+DeoToken._writeCheckpoint(address,uint256) (src/DeoToken.sol#156-168) uses a dangerous strict equality:
+	- n > 0 && checkpoints[delegatee][n - 1].blockNumber == blk (src/DeoToken.sol#162)
+DeodesReputationRegistry.recencyScore(address) (src/DeodesReputationRegistry.sol#161-169) uses a dangerous strict equality:
+	- last == 0 (src/DeodesReputationRegistry.sol#163)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dangerous-strict-equalities
+INFO:Detectors:
+Detector: reentrancy-benign
+Reentrancy in DeodesGovernance.createProposal(uint8,uint256) (src/DeodesGovernance.sol#154-183):
+	External calls:
+	- ok = deo.transferFrom(msg.sender,address(this),deposit) (src/DeodesGovernance.sol#158)
+	State variables written after the call(s):
+	- proposalCount = id + 1 (src/DeodesGovernance.sol#162)
+	- proposals[id] = Proposal({proposer:msg.sender,param:param,newValue:newValue,snapshotBlock:snapshot,quorumVotes:(supply * quorumPct) / 100,forVotes:0,againstVotes:0,createdAt:block.timestamp,queuedAt:0,deposit:deposit,state:State.Pending}) (src/DeodesGovernance.sol#169-181)
+Reentrancy in DeodesCircle.payout(address) (src/DeodesCircle.sol#77-93):
+	External calls:
+	- (okFee,None) = treasury.call{value: fee}() (src/DeodesCircle.sol#87)
+	- (ok,None) = recipient.call{value: net}() (src/DeodesCircle.sol#89)
+	State variables written after the call(s):
+	- totalCollected = 0 (src/DeodesCircle.sol#91)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+INFO:Detectors:
+Detector: reentrancy-events
+Reentrancy in DeodesGovernance._forfeit(uint256,DeodesGovernance.Proposal) (src/DeodesGovernance.sol#300-307):
+	External calls:
+	- ok = deo.transfer(treasury,amount) (src/DeodesGovernance.sol#304)
+	Event emitted after the call(s):
+	- DepositForfeited(id,treasury,amount) (src/DeodesGovernance.sol#306)
+Reentrancy in DeodesGovernance._refund(uint256,DeodesGovernance.Proposal) (src/DeodesGovernance.sol#291-298):
+	External calls:
+	- ok = deo.transfer(p.proposer,amount) (src/DeodesGovernance.sol#295)
+	Event emitted after the call(s):
+	- DepositRefunded(id,p.proposer,amount) (src/DeodesGovernance.sol#297)
+Reentrancy in DeodesGovernance.cancelByProposer(uint256) (src/DeodesGovernance.sol#235-242):
+	External calls:
+	- _refund(id,p) (src/DeodesGovernance.sol#240)
+		- ok = deo.transfer(p.proposer,amount) (src/DeodesGovernance.sol#295)
+	Event emitted after the call(s):
+	- ProposalCanceled(id,false) (src/DeodesGovernance.sol#241)
+Reentrancy in DeodesGovernance.cancelByVoters(uint256) (src/DeodesGovernance.sol#246-256):
+	External calls:
+	- _forfeit(id,p) (src/DeodesGovernance.sol#254)
+		- ok = deo.transfer(treasury,amount) (src/DeodesGovernance.sol#304)
+	Event emitted after the call(s):
+	- ProposalCanceled(id,true) (src/DeodesGovernance.sol#255)
+Reentrancy in DeodesGovernance.createProposal(uint8,uint256) (src/DeodesGovernance.sol#154-183):
+	External calls:
+	- ok = deo.transferFrom(msg.sender,address(this),deposit) (src/DeodesGovernance.sol#158)
+	Event emitted after the call(s):
+	- ProposalCreated(id,msg.sender,param,newValue,(supply * quorumPct) / 100,deposit) (src/DeodesGovernance.sol#182)
+Reentrancy in DeodesGovernance.execute(uint256) (src/DeodesGovernance.sol#224-232):
+	External calls:
+	- _refund(id,p) (src/DeodesGovernance.sol#230)
+		- ok = deo.transfer(p.proposer,amount) (src/DeodesGovernance.sol#295)
+	Event emitted after the call(s):
+	- ProposalExecuted(id,p.param,p.newValue) (src/DeodesGovernance.sol#231)
+Reentrancy in DeodesGovernance.finalize(uint256) (src/DeodesGovernance.sol#206-220):
+	External calls:
+	- _forfeit(id,p) (src/DeodesGovernance.sol#217)
+		- ok = deo.transfer(treasury,amount) (src/DeodesGovernance.sol#304)
+	Event emitted after the call(s):
+	- ProposalDefeated(id) (src/DeodesGovernance.sol#218)
+Reentrancy in DeodesCircle.payout(address) (src/DeodesCircle.sol#77-93):
+	External calls:
+	- (okFee,None) = treasury.call{value: fee}() (src/DeodesCircle.sol#87)
+	- (ok,None) = recipient.call{value: net}() (src/DeodesCircle.sol#89)
+	Event emitted after the call(s):
+	- PaidOut(recipient,net,fee) (src/DeodesCircle.sol#92)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-4
+INFO:Detectors:
+Detector: timestamp
+DeodesGovernance.castVote(uint256,bool) (src/DeodesGovernance.sol#188-202) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp > p.createdAt + votingPeriod (src/DeodesGovernance.sol#191)
+DeodesGovernance.finalize(uint256) (src/DeodesGovernance.sol#206-220) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp <= p.createdAt + votingPeriod (src/DeodesGovernance.sol#209)
+DeodesGovernance.execute(uint256) (src/DeodesGovernance.sol#224-232) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < p.queuedAt + timelockDelay (src/DeodesGovernance.sol#227)
+DeodesReputationRegistry.streakScore(address) (src/DeodesReputationRegistry.sol#142-145) uses timestamp for comparisons
+	Dangerous comparisons:
+	- s > STREAK_MAX (src/DeodesReputationRegistry.sol#144)
+DeodesReputationRegistry.completionScore(address) (src/DeodesReputationRegistry.sol#147-150) uses timestamp for comparisons
+	Dangerous comparisons:
+	- s > COMPLETION_MAX (src/DeodesReputationRegistry.sol#149)
+DeodesReputationRegistry.volumeScore(address) (src/DeodesReputationRegistry.sol#152-155) uses timestamp for comparisons
+	Dangerous comparisons:
+	- whole > VOLUME_MAX (src/DeodesReputationRegistry.sol#154)
+DeodesReputationRegistry.recencyScore(address) (src/DeodesReputationRegistry.sol#161-169) uses timestamp for comparisons
+	Dangerous comparisons:
+	- last == 0 (src/DeodesReputationRegistry.sol#163)
+	- elapsed <= 2592000 (src/DeodesReputationRegistry.sol#165)
+	- elapsed <= 7776000 (src/DeodesReputationRegistry.sol#166)
+	- elapsed <= 15552000 (src/DeodesReputationRegistry.sol#167)
+DeodesReputationRegistry.tierOf(address) (src/DeodesReputationRegistry.sol#176-183) uses timestamp for comparisons
+	Dangerous comparisons:
+	- score >= 800 (src/DeodesReputationRegistry.sol#178)
+	- score >= 600 (src/DeodesReputationRegistry.sol#179)
+	- score >= 400 (src/DeodesReputationRegistry.sol#180)
+	- score >= 200 (src/DeodesReputationRegistry.sol#181)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Detector: low-level-calls
+Low level call in DeodesCircle.payout(address) (src/DeodesCircle.sol#77-93):
+	- (okFee,None) = treasury.call{value: fee}() (src/DeodesCircle.sol#87)
+	- (ok,None) = recipient.call{value: net}() (src/DeodesCircle.sol#89)
+Low level call in DeodesTreasury.withdraw(address,uint256) (src/DeodesTreasury.sol#89-98):
+	- (ok,None) = to.call{value: amount}() (src/DeodesTreasury.sol#95)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+INFO:Slither:. analyzed (7 contracts with 102 detectors), 23 result(s) found

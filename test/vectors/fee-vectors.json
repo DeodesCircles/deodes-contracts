@@ -1,0 +1,76 @@
+{
+  "formula": "fee = (pool * 50) / 10000; net = pool - fee",
+  "note": "Shared with the backend 2.8 fee tests. Range tops at 10^15 base units (~1B USDC); larger pools overflow pool*50 even on-chain, so they are out of scope on both sides. Regenerating? Keep dust cases (fee 0) and the truncation step at 200.",
+  "cases": [
+    {
+      "pool": "0",
+      "fee": "0",
+      "net": "0"
+    },
+    {
+      "pool": "1",
+      "fee": "0",
+      "net": "1"
+    },
+    {
+      "pool": "199",
+      "fee": "0",
+      "net": "199"
+    },
+    {
+      "pool": "200",
+      "fee": "1",
+      "net": "199"
+    },
+    {
+      "pool": "201",
+      "fee": "1",
+      "net": "200"
+    },
+    {
+      "pool": "9999",
+      "fee": "49",
+      "net": "9950"
+    },
+    {
+      "pool": "10000",
+      "fee": "50",
+      "net": "9950"
+    },
+    {
+      "pool": "10001",
+      "fee": "50",
+      "net": "9951"
+    },
+    {
+      "pool": "19999",
+      "fee": "99",
+      "net": "19900"
+    },
+    {
+      "pool": "20000",
+      "fee": "100",
+      "net": "19900"
+    },
+    {
+      "pool": "1000000",
+      "fee": "5000",
+      "net": "995000"
+    },
+    {
+      "pool": "250000000",
+      "fee": "1250000",
+      "net": "248750000"
+    },
+    {
+      "pool": "100000000",
+      "fee": "500000",
+      "net": "99500000"
+    },
+    {
+      "pool": "1000000000000000",
+      "fee": "5000000000000",
+      "net": "995000000000000"
+    }
+  ]
+}

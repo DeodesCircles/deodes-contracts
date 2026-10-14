@@ -1,0 +1,37 @@
+# Arc mainnet deployment config (UNIFIED-PLAN 1.11)
+# MAINNET RULES: fresh deployer key (never used on testnet — see
+# MAINNET-INCIDENT-REPORT.md), two operators present, hardware keys, no
+# --private-key in shell history (use --account), full CEREMONY.md log.
+
+chain_id = 5042
+rpc_url = "https://rpc.mainnet.arc.io"
+explorer = "https://explorer.arc.io"
+verifier = "blockscout"
+compiler = "v0.8.36"
+optimizer = true
+optimizer_runs = 200
+
+# Deploy order is load-bearing (wiring): treasury -> token -> registry ->
+# factory(protocolTreasury=treasury) -> governance(token, treasury).
+[contracts.treasury]
+script = "script/DeployTreasury.s.sol:DeployTreasury"
+
+[contracts.token]
+script = "script/DeployDeoToken.s.sol:DeployDeoToken"
+
+[contracts.registry]
+script = "script/DeployReputation.s.sol:DeployReputation"
+
+[contracts.factory]
+script = "script/DeployFactory.s.sol:DeployFactory"
+# PROTOCOL_TREASURY=<treasury address from this ceremony>
+
+[contracts.governance]
+script = "script/DeployGovernance.s.sol:DeployGovernance"
+# DEO_TOKEN=<token address> TREASURY=<treasury address>
+
+# Post-deploy ownership target (multisig). REPLACE-ME before ceremony.
+# Mainnet MUST differ from testnet; both MUST differ from keeper escrow (0.6).
+[ceremony]
+multisig = "0xREPLACE_WITH_MAINNET_MULTISIG"
+recorders = []

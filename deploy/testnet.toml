@@ -1,0 +1,35 @@
+# Arc testnet deployment config (UNIFIED-PLAN 1.11)
+# Values here are INTENT + RECORD, not secrets. Secrets (keys) never enter files.
+
+chain_id = 5042002
+rpc_url = "https://rpc.testnet.arc.io"
+explorer = "https://explorer.testnet.arc.io"
+verifier = "blockscout"   # forge verify-contract --verifier blockscout --verifier-url <explorer>/api/
+compiler = "v0.8.36"
+optimizer = true
+optimizer_runs = 200
+
+# Deploy order is load-bearing (wiring): treasury -> token -> registry ->
+# factory(protocolTreasury=treasury) -> governance(token, treasury).
+[contracts.treasury]
+script = "script/DeployTreasury.s.sol:DeployTreasury"
+
+[contracts.token]
+script = "script/DeployDeoToken.s.sol:DeployDeoToken"
+
+[contracts.registry]
+script = "script/DeployReputation.s.sol:DeployReputation"
+
+[contracts.factory]
+script = "script/DeployFactory.s.sol:DeployFactory"
+# PROTOCOL_TREASURY=<treasury address from this ceremony>
+
+[contracts.governance]
+script = "script/DeployGovernance.s.sol:DeployGovernance"
+# DEO_TOKEN=<token address> TREASURY=<treasury address>
+
+# Post-deploy ownership target (multisig). REPLACE-ME before ceremony.
+[ceremony]
+multisig = "0xREPLACE_WITH_TESTNET_MULTISIG"
+# Recorders to register on the registry after deploy (factory + first circles).
+recorders = []

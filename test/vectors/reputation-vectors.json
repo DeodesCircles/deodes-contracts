@@ -1,0 +1,96 @@
+{
+  "_note": "Shared DeoScore test vectors (UNIFIED-PLAN 1.6). Source of truth for the on-chain formula AND the backend 2.9 mirror: both sides MUST assert these exact numbers. Formula: streak min(streak*35,350) + completions min(completions*50,300) + volume min(wholeUSDC,200) + recency 150/100/50/0 (<=30d/<=90d/<=180d/else, 0 if never active). Tiers: Bronze 0-199, Silver 200-399, Gold 400-599, Platinum 600-799, Diamond 800-1000. Amounts in wei (1 USDC = 1e18). Solidity suite: test/DeodesReputation.t.sol. Backend mirror: 2.9 asserts this file.",
+  "unit": { "usdcWei": "1000000000000000000" },
+  "cases": [
+    {
+      "name": "fresh user, no history",
+      "actions": [],
+      "expect": { "streak": 0, "completions": 0, "volumeUSDC": 0, "recency": 0, "score": 0, "tier": "Bronze" }
+    },
+    {
+      "name": "single on-time 10 USDC (just under Silver)",
+      "actions": [{ "op": "contribution", "amountWei": "10000000000000000000", "onTime": true }],
+      "expect": { "streak": 35, "completions": 0, "volumeUSDC": 10, "recency": 150, "score": 195, "tier": "Bronze" }
+    },
+    {
+      "name": "two on-time 10 USDC (Silver)",
+      "actions": [
+        { "op": "contribution", "amountWei": "10000000000000000000", "onTime": true },
+        { "op": "contribution", "amountWei": "10000000000000000000", "onTime": true }
+      ],
+      "expect": { "streak": 70, "completions": 0, "volumeUSDC": 20, "recency": 150, "score": 240, "tier": "Silver" }
+    },
+    {
+      "name": "saturated Diamond",
+      "actions": [
+        { "op": "contribution_x10", "amountWei": "25000000000000000000", "onTime": true, "times": 10 },
+        { "op": "completion", "times": 6 }
+      ],
+      "expect": { "streak": 350, "completions": 300, "volumeUSDC": 200, "recency": 150, "score": 1000, "tier": "Diamond" }
+    },
+    {
+      "name": "late payment resets streak",
+      "actions": [
+        { "op": "contribution", "amountWei": "10000000000000000000", "onTime": true, "times": 3 },
+        { "op": "contribution", "amountWei": "10000000000000000000", "onTime": false }
+      ],
+      "expect": { "streak": 0, "completions": 0, "volumeUSDC": 40, "recency": 150, "score": 190, "tier": "Bronze" }
+    },
+    {
+      "name": "default resets streak and counts (exact Silver floor)",
+      "actions": [
+        { "op": "contribution", "amountWei": "10000000000000000000", "onTime": true, "times": 5 },
+        { "op": "default" }
+      ],
+      "expect": { "streak": 0, "completions": 0, "volumeUSDC": 50, "recency": 150, "score": 200, "tier": "Silver", "defaults": 1 }
+    },
+    {
+      "name": "stale 100 days (Gold via decayed recency)",
+      "actions": [
+        { "op": "contribution", "amountWei": "10000000000000000000", "onTime": true, "times": 10 },
+        { "op": "warpDays", "days": 100 }
+      ],
+      "expect": { "streak": 350, "completions": 0, "volumeUSDC": 100, "recency": 50, "score": 500, "tier": "Gold" }
+    },
+    {
+      "name": "dormant 200 days (recency zeroed)",
+      "actions": [
+        { "op": "contribution", "amountWei": "10000000000000000000", "onTime": true, "times": 10 },
+        { "op": "warpDays", "days": 200 }
+      ],
+      "expect": { "streak": 350, "completions": 0, "volumeUSDC": 100, "recency": 0, "score": 450, "tier": "Gold" }
+    },
+    {
+      "name": "completions only, never contributed (no recency)",
+      "actions": [{ "op": "completion", "times": 6 }],
+      "expect": { "streak": 0, "completions": 300, "volumeUSDC": 0, "recency": 0, "score": 300, "tier": "Silver" }
+    },
+    {
+      "name": "whale single payment (volume capped)",
+      "actions": [{ "op": "contribution", "amountWei": "500000000000000000000", "onTime": true }],
+      "expect": { "streak": 35, "completions": 0, "volumeUSDC": 200, "recency": 150, "score": 385, "tier": "Silver" }
+    },
+    {
+      "name": "exact Gold floor 400",
+      "actions": [
+        { "op": "contribution", "amountWei": "5000000000000000000", "onTime": true, "times": 5 },
+        { "op": "completion" }
+      ],
+      "expect": { "streak": 175, "completions": 50, "volumeUSDC": 25, "recency": 150, "score": 400, "tier": "Gold" }
+    }
+  ],
+  "tiers": {
+    "Bronze": { "scoreMin": 0, "scoreMax": 199, "collateralBips": 1000, "maxSize": 5, "maxContributionUSDC": 100 },
+    "Silver": { "scoreMin": 200, "scoreMax": 399, "collateralBips": 500, "maxSize": 10, "maxContributionUSDC": 500 },
+    "Gold": { "scoreMin": 400, "scoreMax": 599, "collateralBips": 300, "maxSize": 20, "maxContributionUSDC": 2000 },
+    "Platinum": { "scoreMin": 600, "scoreMax": 799, "collateralBips": 100, "maxSize": 50, "maxContributionUSDC": 10000 },
+    "Diamond": { "scoreMin": 800, "scoreMax": 1000, "collateralBips": 0, "maxSize": 100, "maxContributionUSDC": 50000 }
+  },
+  "eligibility": [
+    { "who": "fresh user (Bronze)", "size": 5, "contributionUSDC": 100, "ok": true, "code": 0 },
+    { "who": "fresh user (Bronze)", "size": 6, "contributionUSDC": 100, "ok": false, "code": 1 },
+    { "who": "fresh user (Bronze)", "size": 5, "contributionUSDC": 101, "ok": false, "code": 2 },
+    { "who": "saturated Diamond", "size": 100, "contributionUSDC": 50000, "ok": true, "code": 0 },
+    { "who": "saturated Diamond", "size": 101, "contributionUSDC": 1, "ok": false, "code": 1 }
+  ]
+}

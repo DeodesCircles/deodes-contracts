@@ -1,0 +1,22 @@
+{
+  "deployments": [
+    {
+      "chain": "arc-mainnet",
+      "chainId": 5042,
+      "contract": "DeodesCircle",
+      "address": "0x70A7CCB7b5fe856384Aab3aAF553E09A10AF14A4",
+      "deployTx": "0xab14fe1864126da7fcf447899ab9f9c7ea6ffc2ed184ce2210c5a096bebf19bd",
+      "block": 25898475,
+      "constructorArgs": {
+        "treasury": "0x51b45Ba8570551e0D1fe818227d8bAa8b556694D",
+        "contributionWei": "10000000000000000000",
+        "maxMembers": 5
+      },
+      "compiler": "v0.8.36",
+      "optimizer": false,
+      "license": "Apache-2.0",
+      "verified": true,
+      "explorer": "https://explorer.arc.io/address/0x70A7CCB7b5fe856384Aab3aAF553E09A10AF14A4"
+    }
+  ]
+}
